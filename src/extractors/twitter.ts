@@ -1,6 +1,6 @@
-import { BaseExtractor } from './base';
-import { Content, ContentItem } from '../types';
-import { SITE_SELECTORS } from '../constants';
+import { BaseExtractor } from './base.js';
+import { Content, ContentItem } from '../types.js';
+import { SITE_SELECTORS } from '../constants.js';
 
 export class TwitterExtractor extends BaseExtractor {
   public async extract(): Promise<Content> {

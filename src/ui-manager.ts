@@ -1,4 +1,4 @@
-import { ContentItem, CheckboxStyling } from './types';
+import { ContentItem, CheckboxStyling } from './types.js';
 
 export class UIManager {
   private checkboxes = new Map<HTMLElement, { item: ContentItem, checkboxEl: HTMLElement }>();

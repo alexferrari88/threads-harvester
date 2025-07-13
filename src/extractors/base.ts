@@ -1,4 +1,4 @@
-import { Content } from '../types';
+import { Content } from '../types.js';
 
 export abstract class BaseExtractor {
   // Cache for cleaned text to avoid repeated processing

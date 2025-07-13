@@ -1,6 +1,6 @@
 {
   "name": "threads-harvester",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "A TypeScript library for extracting threaded content from discussion platforms like Reddit, Twitter, and Hacker News",
   "type": "module",
   "main": "dist/index.js",

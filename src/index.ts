@@ -1,10 +1,10 @@
-import { UIManager } from './ui-manager';
-import { BaseExtractor } from './extractors/base';
-import { Content, ScraperOptions } from './types';
-import { GenericExtractor } from './extractors/generic';
-import { HackerNewsExtractor } from './extractors/hackernews';
-import { RedditExtractor } from './extractors/reddit';
-import { TwitterExtractor } from './extractors/twitter';
+import { UIManager } from './ui-manager.js';
+import { BaseExtractor } from './extractors/base.js';
+import { Content, ScraperOptions } from './types.js';
+import { GenericExtractor } from './extractors/generic.js';
+import { HackerNewsExtractor } from './extractors/hackernews.js';
+import { RedditExtractor } from './extractors/reddit.js';
+import { TwitterExtractor } from './extractors/twitter.js';
 
 export class ContentScraper {
   private extractor: BaseExtractor;
@@ -98,6 +98,6 @@ export class ContentScraper {
 }
 
 // Export types and constants for consumers
-export * from './types';
-export * from './extractors/base';
-export * from './constants';
+export * from './types.js';
+export * from './extractors/base.js';
+export * from './constants.js';

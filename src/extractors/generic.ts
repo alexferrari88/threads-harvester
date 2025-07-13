@@ -1,5 +1,5 @@
-import { BaseExtractor } from './base';
-import { Content, ContentItem } from '../types';
+import { BaseExtractor } from './base.js';
+import { Content, ContentItem } from '../types.js';
 
 export class GenericExtractor extends BaseExtractor {
   public async extract(): Promise<Content> {
