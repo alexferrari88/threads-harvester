@@ -35,13 +35,14 @@ export abstract class BaseExtractor {
         NodeFilter.SHOW_TEXT,
         {
           acceptNode: (node) => {
-            const parent = node.parentElement;
-            if (!parent) return NodeFilter.FILTER_REJECT;
-            
-            // Skip script, style, and other non-content elements
-            const tagName = parent.tagName.toLowerCase();
-            if (['script', 'style', 'noscript', 'svg', 'canvas'].includes(tagName)) {
-              return NodeFilter.FILTER_REJECT;
+            // Check if any ancestor is an excluded element
+            let current = node.parentElement;
+            while (current) {
+              const tagName = current.tagName.toLowerCase();
+              if (['script', 'style', 'noscript', 'svg', 'canvas'].includes(tagName)) {
+                return NodeFilter.FILTER_REJECT;
+              }
+              current = current.parentElement;
             }
             
             return NodeFilter.FILTER_ACCEPT;
@@ -85,7 +86,9 @@ export abstract class BaseExtractor {
         const tagName = el.tagName.toLowerCase();
         
         // Skip script, style, and other non-content elements
-        if (!['script', 'style', 'noscript', 'svg', 'canvas'].includes(tagName)) {
+        if (['script', 'style', 'noscript', 'svg', 'canvas'].includes(tagName)) {
+          // Skip this element and all its children
+        } else {
           const childText = this.extractTextRecursive(el);
           if (childText) {
             textParts.push(childText);
