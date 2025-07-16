@@ -161,14 +161,36 @@ describe('HackerNewsExtractor', () => {
 
     it('should ignore comments that are too short', async () => {
       document.body.innerHTML = `
-        <div class="comment-tree">
-          <div class="comtr">
-            <div class="commtext">Short</div>
-          </div>
-          <div class="comtr">
-            <div class="commtext">This comment is long enough to be extracted.</div>
-          </div>
-        </div>
+        <table border="0" class="comment-tree">
+          <tr class="athing comtr" id="comment1">
+            <td>
+              <table border="0">
+                <tr>
+                  <td class="ind" indent="0"><img src="s.gif" height="1" width="0"></td>
+                  <td class="default">
+                    <div class="comment">
+                      <div class="commtext">Short</div>
+                    </div>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <tr class="athing comtr" id="comment2">
+            <td>
+              <table border="0">
+                <tr>
+                  <td class="ind" indent="0"><img src="s.gif" height="1" width="0"></td>
+                  <td class="default">
+                    <div class="comment">
+                      <div class="commtext">This comment is long enough to be extracted.</div>
+                    </div>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
       `;
       
       const result = await extractor.extract();
@@ -179,14 +201,36 @@ describe('HackerNewsExtractor', () => {
 
     it('should ignore hidden comments', async () => {
       document.body.innerHTML = `
-        <div class="comment-tree">
-          <div class="comtr">
-            <div class="commtext" style="display: none;">Hidden comment content that would be long enough.</div>
-          </div>
-          <div class="comtr">
-            <div class="commtext">Visible comment content that is long enough.</div>
-          </div>
-        </div>
+        <table border="0" class="comment-tree">
+          <tr class="athing comtr" id="comment1">
+            <td>
+              <table border="0">
+                <tr>
+                  <td class="ind" indent="0"><img src="s.gif" height="1" width="0"></td>
+                  <td class="default">
+                    <div class="comment">
+                      <div class="commtext" style="display: none;">Hidden comment content that would be long enough.</div>
+                    </div>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <tr class="athing comtr" id="comment2">
+            <td>
+              <table border="0">
+                <tr>
+                  <td class="ind" indent="0"><img src="s.gif" height="1" width="0"></td>
+                  <td class="default">
+                    <div class="comment">
+                      <div class="commtext">Visible comment content that is long enough.</div>
+                    </div>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
       `;
       
       const result = await extractor.extract();
@@ -309,16 +353,27 @@ describe('HackerNewsExtractor', () => {
 
     it('should extract both main story and comments', async () => {
       document.body.innerHTML = `
-        <div class="comment-tree">
-          <div class="comtr">
-            <div class="commtext">Comment content that is long enough.</div>
-            <div class="comhead">
-              <span class="age">
-                <a href="https://news.ycombinator.com/item?id=456">1 hour ago</a>
-              </span>
-            </div>
-          </div>
-        </div>
+        <table border="0" class="comment-tree">
+          <tr class="athing comtr" id="456">
+            <td>
+              <table border="0">
+                <tr>
+                  <td class="ind" indent="0"><img src="s.gif" height="1" width="0"></td>
+                  <td class="default">
+                    <div class="comhead">
+                      <span class="age">
+                        <a href="https://news.ycombinator.com/item?id=456">1 hour ago</a>
+                      </span>
+                    </div>
+                    <div class="comment">
+                      <div class="commtext">Comment content that is long enough.</div>
+                    </div>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
         <div class="athing">
           <div class="titleline">
             <a href="https://example.com/story">Story Title</a>
@@ -346,13 +401,24 @@ describe('HackerNewsExtractor', () => {
       const extractorWithHtml = new HackerNewsExtractor(true);
       
       document.body.innerHTML = `
-        <div class="comment-tree">
-          <div class="comtr">
-            <div class="commtext">
-              <p>Comment with <a href="#">link</a> and formatting.</p>
-            </div>
-          </div>
-        </div>
+        <table border="0" class="comment-tree">
+          <tr class="athing comtr" id="comment1">
+            <td>
+              <table border="0">
+                <tr>
+                  <td class="ind" indent="0"><img src="s.gif" height="1" width="0"></td>
+                  <td class="default">
+                    <div class="comment">
+                      <div class="commtext">
+                        <p>Comment with <a href="#">link</a> and formatting.</p>
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
       `;
       
       const result = await extractorWithHtml.extract();
@@ -363,13 +429,24 @@ describe('HackerNewsExtractor', () => {
 
     it('should not include HTML content when includeHtml is false', async () => {
       document.body.innerHTML = `
-        <div class="comment-tree">
-          <div class="comtr">
-            <div class="commtext">
-              <p>Comment with <a href="#">link</a> and formatting.</p>
-            </div>
-          </div>
-        </div>
+        <table border="0" class="comment-tree">
+          <tr class="athing comtr" id="comment1">
+            <td>
+              <table border="0">
+                <tr>
+                  <td class="ind" indent="0"><img src="s.gif" height="1" width="0"></td>
+                  <td class="default">
+                    <div class="comment">
+                      <div class="commtext">
+                        <p>Comment with <a href="#">link</a> and formatting.</p>
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
       `;
       
       const result = await extractor.extract();
@@ -380,14 +457,36 @@ describe('HackerNewsExtractor', () => {
 
     it('should generate unique IDs for different items', async () => {
       document.body.innerHTML = `
-        <div class="comment-tree">
-          <div class="comtr">
-            <div class="commtext">First comment content that is long enough.</div>
-          </div>
-          <div class="comtr">
-            <div class="commtext">Second comment content that is different and long enough.</div>
-          </div>
-        </div>
+        <table border="0" class="comment-tree">
+          <tr class="athing comtr" id="comment1">
+            <td>
+              <table border="0">
+                <tr>
+                  <td class="ind" indent="0"><img src="s.gif" height="1" width="0"></td>
+                  <td class="default">
+                    <div class="comment">
+                      <div class="commtext">First comment content that is long enough.</div>
+                    </div>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <tr class="athing comtr" id="comment2">
+            <td>
+              <table border="0">
+                <tr>
+                  <td class="ind" indent="0"><img src="s.gif" height="1" width="0"></td>
+                  <td class="default">
+                    <div class="comment">
+                      <div class="commtext">Second comment content that is different and long enough.</div>
+                    </div>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
       `;
       
       const result = await extractor.extract();
@@ -400,16 +499,27 @@ describe('HackerNewsExtractor', () => {
 
     it('should handle nested comment structures', async () => {
       document.body.innerHTML = `
-        <div class="comment-tree">
-          <div class="comtr">
-            <div class="commtext">
-              <div>
-                <span>Nested comment content with multiple elements that is long enough.</span>
-                <div>Additional nested content</div>
-              </div>
-            </div>
-          </div>
-        </div>
+        <table border="0" class="comment-tree">
+          <tr class="athing comtr" id="comment1">
+            <td>
+              <table border="0">
+                <tr>
+                  <td class="ind" indent="0"><img src="s.gif" height="1" width="0"></td>
+                  <td class="default">
+                    <div class="comment">
+                      <div class="commtext">
+                        <div>
+                          <span>Nested comment content with multiple elements that is long enough.</span>
+                          <div>Additional nested content</div>
+                        </div>
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
       `;
       
       const result = await extractor.extract();
