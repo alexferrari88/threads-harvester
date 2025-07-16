@@ -13,7 +13,7 @@ export const SITE_SELECTORS = {
     POST_ID: '.subtext span.age > a', // the href
     COMMENTS: '.commtext',
     COMMENT_ID: '.comhead span.age > a', // the href 
-    COMMENT_TREE: '.comment-tree .comtr',
+    COMMENT_TREE: 'tr.athing.comtr',
     STORY_ITEM: '.athing',
     TITLE_LINK: '.titleline > a'
   },
