@@ -5,7 +5,8 @@
 export const SITE_SELECTORS = {
   REDDIT: {
     POST: '[slot="text-body"]',
-    COMMENTS: '[slot="comment"]'
+    COMMENTS: '[slot="comment"]',
+    COMMENT_ID: '[slot="commentMeta"] a:has(faceplate-timeago)' // the href
   },
   HACKER_NEWS: {
     POST: '.toptext',

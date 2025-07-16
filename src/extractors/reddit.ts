@@ -17,13 +17,14 @@ export class RedditExtractor extends BaseExtractor {
       if (this.isElementVisible(commentEl)) {
         const textContent = this.extractTextFromElement(commentEl);
         
-        if (textContent && textContent.length > 10) {
+        if (textContent && textContent.length > 5) {
           const item: ContentItem = {
             id: this.generateId(textContent),
             element: commentEl,
             textContent,
             htmlContent: this.includeHtml ? commentEl.innerHTML : undefined,
             type: 'comment',
+            URL: (document.querySelector(SITE_SELECTORS.REDDIT.COMMENT_ID) as HTMLAnchorElement)?.href,
             selected: false
           };
           content.items.push(item);
@@ -38,13 +39,14 @@ export class RedditExtractor extends BaseExtractor {
       if (this.isElementVisible(postEl)) {
         const textContent = this.extractTextFromElement(postEl);
         
-        if (textContent && textContent.length > 10) {
+        if (textContent && textContent.length > 5) {
           const item: ContentItem = {
             id: this.generateId(textContent),
             element: postEl,
             textContent,
             htmlContent: this.includeHtml ? postEl.innerHTML : undefined,
             type: 'post',
+            URL: window.location.href,
             selected: false
           };
           content.items.push(item);
