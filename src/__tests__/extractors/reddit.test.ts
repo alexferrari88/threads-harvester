@@ -282,6 +282,113 @@ describe('RedditExtractor', () => {
       expect(result.items[2].textContent).toContain('Another post that appears third');
     });
 
+    it('should handle image posts with only comments (no text-body)', async () => {
+      document.body.innerHTML = `
+        <div slot="comment">
+          <div class="comment-content">
+            <div class="author">user123</div>
+            <div class="comment-text">Great photo! This really shows the scale of the changes being made.</div>
+          </div>
+        </div>
+        <div slot="comment">
+          <div class="comment-content">
+            <div class="author">anotheruser</div>
+            <div class="comment-text">I can't believe they're actually doing this. What a waste of beautiful gardens.</div>
+          </div>
+        </div>
+      `;
+      
+      const result = await extractor.extract();
+      
+      expect(result.items).toHaveLength(2);
+      expect(result.items.every(item => item.type === 'comment')).toBe(true);
+      expect(result.items[0].textContent).toContain('Great photo');
+      expect(result.items[1].textContent).toContain('I can\'t believe');
+    });
+
+    it('should handle realistic Reddit comment thread structure', async () => {
+      document.body.innerHTML = `
+        <div slot="comment">
+          <div class="comment-content">
+            <div class="comment-meta">
+              <span class="author">TopLevelUser</span>
+              <span class="score">1.2k points</span>
+              <span class="age">3 hours ago</span>
+            </div>
+            <div class="comment-body">
+              <p>This is absolutely devastating. The Rose Garden has been a symbol of the presidency for decades.</p>
+              <p>Here's what I think about the environmental impact...</p>
+            </div>
+          </div>
+        </div>
+        <div slot="comment">
+          <div class="comment-content">
+            <div class="comment-meta">
+              <span class="author">ReplyUser</span>
+              <span class="score">456 points</span>
+              <span class="age">2 hours ago</span>
+            </div>
+            <div class="comment-body">
+              <p>I completely agree with your assessment. The historical significance cannot be overstated.</p>
+              <blockquote>Here's what I think about the environmental impact...</blockquote>
+              <p>Your point about the environment is spot on. These gardens have been home to...</p>
+            </div>
+          </div>
+        </div>
+      `;
+      
+      const result = await extractor.extract();
+      
+      expect(result.items).toHaveLength(2);
+      expect(result.items.every(item => item.type === 'comment')).toBe(true);
+      
+      // Check that metadata is included in text content
+      expect(result.items[0].textContent).toContain('TopLevelUser');
+      expect(result.items[0].textContent).toContain('1.2k points');
+      expect(result.items[0].textContent).toContain('devastating');
+      
+      expect(result.items[1].textContent).toContain('ReplyUser');
+      expect(result.items[1].textContent).toContain('456 points');
+      expect(result.items[1].textContent).toContain('completely agree');
+    });
+
+    it('should handle comments with awards and complex formatting', async () => {
+      document.body.innerHTML = `
+        <div slot="comment">
+          <div class="comment-content">
+            <div class="comment-meta">
+              <span class="author">AwardedUser</span>
+              <span class="awards">
+                <span class="award gold">Gold x2</span>
+                <span class="award silver">Silver x5</span>
+              </span>
+              <span class="score">5.7k points</span>
+            </div>
+            <div class="comment-body">
+              <p>I'm a landscape architect and I can tell you this is <strong>completely unnecessary</strong>.</p>
+              <p>The Rose Garden was designed by <em>Bunny Mellon</em> and has been maintained for:</p>
+              <ul>
+                <li>Historical preservation</li>
+                <li>Environmental sustainability</li>
+                <li>Cultural significance</li>
+              </ul>
+              <p>This decision shows a complete lack of understanding of <code>landscape heritage</code>.</p>
+            </div>
+          </div>
+        </div>
+      `;
+      
+      const result = await extractor.extract();
+      
+      expect(result.items).toHaveLength(1);
+      expect(result.items[0].type).toBe('comment');
+      expect(result.items[0].textContent).toContain('AwardedUser');
+      expect(result.items[0].textContent).toContain('Gold x2');
+      expect(result.items[0].textContent).toContain('landscape architect');
+      expect(result.items[0].textContent).toContain('Historical preservation');
+      expect(result.items[0].textContent).toContain('landscape heritage');
+    });
+
     it('should handle empty Reddit page gracefully', async () => {
       document.body.innerHTML = `
         <div class="reddit-header">
@@ -297,6 +404,60 @@ describe('RedditExtractor', () => {
       expect(result.items).toHaveLength(0);
       expect(result.pageURL).toBe('https://www.reddit.com/r/programming/comments/abc123/test_post/');
       expect(result.title).toBe('Test Reddit Page');
+    });
+
+    it('should handle image post page structure (no text-body, only comments)', async () => {
+      // Simulate a typical image post page like r/pics with image and comments
+      document.title = 'Trump is paving the White House Rose Garden : r/pics';
+      document.body.innerHTML = `
+        <div class="post-header">
+          <h1>Trump is paving the White House Rose Garden</h1>
+        </div>
+        <div class="post-media">
+          <img src="/image.jpg" alt="Rose Garden" />
+        </div>
+        <div class="post-actions">
+          <button>Upvote</button>
+          <button>Downvote</button>
+          <button>Comments</button>
+        </div>
+        <div class="comments-section">
+          <div slot="comment">
+            <div class="comment-content">
+              <span class="author">concerned_citizen</span>
+              <div class="comment-text">This is heartbreaking. The Rose Garden has such historical significance.</div>
+            </div>
+          </div>
+          <div slot="comment">
+            <div class="comment-content">
+              <span class="author">gardener_pro</span>
+              <div class="comment-text">As someone who works with historic gardens, this is devastating. Those plants have been there for decades.</div>
+            </div>
+          </div>
+          <div slot="comment">
+            <div class="comment-content">
+              <span class="author">political_observer</span>
+              <div class="comment-text">I wonder if future administrations will be able to restore it. This seems like such a permanent change.</div>
+            </div>
+          </div>
+        </div>
+      `;
+      
+      const result = await extractor.extract();
+      
+      expect(result.items).toHaveLength(3);
+      expect(result.items.every(item => item.type === 'comment')).toBe(true);
+      expect(result.title).toBe('Trump is paving the White House Rose Garden : r/pics');
+      
+      // Verify specific comment content
+      expect(result.items[0].textContent).toContain('concerned_citizen');
+      expect(result.items[0].textContent).toContain('heartbreaking');
+      
+      expect(result.items[1].textContent).toContain('gardener_pro');
+      expect(result.items[1].textContent).toContain('devastating');
+      
+      expect(result.items[2].textContent).toContain('political_observer');
+      expect(result.items[2].textContent).toContain('future administrations');
     });
   });
 });
