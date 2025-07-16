@@ -5,7 +5,7 @@ import { SITE_SELECTORS } from '../../constants';
 // Mock window.location
 Object.defineProperty(window, 'location', {
   value: {
-    href: 'https://twitter.com/user/status/123456789'
+    href: 'https://x.com/iannuttall/status/1945060688319197210'
   },
   writable: true
 });
@@ -47,7 +47,7 @@ describe('TwitterExtractor', () => {
       
       const result = await extractor.extract();
       
-      expect(result.pageURL).toBe('https://twitter.com/user/status/123456789');
+      expect(result.pageURL).toBe('https://x.com/iannuttall/status/1945060688319197210');
       expect(result.title).toBe('Twitter Post');
       expect(result.items).toEqual([]);
     });
@@ -356,7 +356,7 @@ describe('TwitterExtractor', () => {
       const result = await extractor.extract();
       
       expect(result.items).toHaveLength(0);
-      expect(result.pageURL).toBe('https://twitter.com/user/status/123456789');
+      expect(result.pageURL).toBe('https://x.com/iannuttall/status/1945060688319197210');
       expect(result.title).toBe('Test Twitter Page');
     });
 
@@ -376,6 +376,377 @@ describe('TwitterExtractor', () => {
       
       expect(result.items).toHaveLength(1);
       expect(result.items[0].textContent).toContain('Specific tweet content');
+    });
+  });
+
+  describe('Real Twitter DOM Structure Tests', () => {
+    it('should extract text from realistic complex Twitter DOM structure', async () => {
+      // Based on actual Twitter DOM structure observed in x.com/iannuttall/status/1945060688319197210
+      // Focus on text extraction from complex nested structures
+      document.body.innerHTML = `
+        <main>
+          <region>
+            <article>
+              <div>
+                <div>
+                  <div>
+                    <link href="/iannuttall">
+                      <div>
+                        <div>Ian Nuttall</div>
+                        <img alt="Verified account" />
+                      </div>
+                    </link>
+                    <link href="/iannuttall">
+                      <div>@iannuttall</div>
+                    </link>
+                  </div>
+                </div>
+                <div>Claude Code seems to have been a bit "dumber" the past few days and just making stupid mistakes. I legit would pay $500/mo to just have the good version that never gets a quantized/degraded during peak times!</div>
+                <div>
+                  <link href="/iannuttall/status/1945060688319197210">
+                    <time>11:59 AM · Jul 15, 2025</time>
+                  </link>
+                  <div>
+                    <div>224.2K Views</div>
+                  </div>
+                </div>
+                <div>
+                  <button>247 Replies</button>
+                  <button>86 Reposts</button>
+                  <button>1484 Likes</button>
+                </div>
+              </div>
+            </article>
+          </region>
+        </main>
+      `;
+      
+      const result = await extractor.extract();
+      
+      expect(result.items).toHaveLength(1);
+      expect(result.items[0].textContent).toContain('Claude Code seems to have been a bit "dumber"');
+      expect(result.items[0].textContent).toContain('$500/mo');
+      expect(result.items[0].textContent).toContain('quantized/degraded during peak times');
+    });
+
+    it('should extract text from deeply nested Twitter thread structure', async () => {
+      // Test extraction from multiple tweets in complex nested structure
+      document.body.innerHTML = `
+        <main>
+          <region>
+            <article>
+              <div>
+                <div>
+                  <div>
+                    <div>Ian Nuttall</div>
+                    <div>@iannuttall</div>
+                  </div>
+                </div>
+                <div>This is the main tweet content that should be extracted correctly.</div>
+                <div>
+                  <button>247 Replies</button>
+                  <button>86 Reposts</button>
+                  <button>1484 Likes</button>
+                </div>
+              </div>
+            </article>
+            <article>
+              <div>
+                <div>
+                  <div>
+                    <div>Ahmer Sultan</div>
+                    <div>@cyphorous</div>
+                    <time>21h</time>
+                  </div>
+                </div>
+                <div>I don't think it's Claude Code - it's Sonnet 4. Happening on Cursor too.</div>
+                <div>
+                  <button>5 Replies</button>
+                  <button>53 Likes</button>
+                  <div>13K Views</div>
+                </div>
+              </div>
+            </article>
+          </region>
+        </main>
+      `;
+      
+      const result = await extractor.extract();
+      
+      expect(result.items).toHaveLength(2);
+      expect(result.items[0].textContent).toContain('main tweet content');
+      expect(result.items[1].textContent).toContain('Sonnet 4');
+      expect(result.items[1].textContent).toContain('Happening on Cursor too');
+    });
+
+    it('should extract text from tweets with mixed content types', async () => {
+      document.body.innerHTML = `
+        <article>
+          <div>
+            <div>
+              <div>Username</div>
+              <div>@handle</div>
+            </div>
+            <div>
+              <div>Check out this link: https://example.com and this #hashtag</div>
+              <div>Also mentioning @someone else in the tweet</div>
+            </div>
+            <div>
+              <button>Reply</button>
+              <button>Repost</button>
+              <button>Like</button>
+            </div>
+          </div>
+        </article>
+      `;
+      
+      const result = await extractor.extract();
+      
+      expect(result.items).toHaveLength(1);
+      expect(result.items[0].textContent).toContain('https://example.com');
+      expect(result.items[0].textContent).toContain('#hashtag');
+      expect(result.items[0].textContent).toContain('@someone else');
+    });
+
+    it('should handle tweets with script and style elements correctly', async () => {
+      document.body.innerHTML = `
+        <article>
+          <div>
+            <div>
+              <div>Valid tweet content here</div>
+              <script>console.log('should be filtered out');</script>
+              <style>.hidden { display: none; }</style>
+            </div>
+            <div>More valid content</div>
+          </div>
+        </article>
+      `;
+      
+      const result = await extractor.extract();
+      
+      expect(result.items).toHaveLength(1);
+      expect(result.items[0].textContent).toContain('Valid tweet content here');
+      expect(result.items[0].textContent).toContain('More valid content');
+      expect(result.items[0].textContent).not.toContain('console.log');
+      expect(result.items[0].textContent).not.toContain('display: none');
+    });
+
+    it('should extract text from tweets with many nested divs and spans', async () => {
+      document.body.innerHTML = `
+        <article>
+          <div>
+            <div>
+              <div>
+                <div>
+                  <span>
+                    <div>
+                      <span>This is deeply nested content</span>
+                      <div>
+                        <span>with multiple levels</span>
+                      </div>
+                    </div>
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div>
+              <div>
+                <div>
+                  <span>And this is more content</span>
+                  <div>
+                    <span>in a complex structure</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </article>
+      `;
+      
+      const result = await extractor.extract();
+      
+      expect(result.items).toHaveLength(1);
+      expect(result.items[0].textContent).toContain('deeply nested content');
+      expect(result.items[0].textContent).toContain('multiple levels');
+      expect(result.items[0].textContent).toContain('more content');
+      expect(result.items[0].textContent).toContain('complex structure');
+    });
+
+    it('should handle malformed or empty article structures gracefully', async () => {
+      document.body.innerHTML = `
+        <article>
+          <div>
+            <div>
+              <div></div>
+            </div>
+            <div></div>
+            <div>
+              <button>0 Replies</button>
+            </div>
+          </div>
+        </article>
+        <article>
+          <div>
+            <div>Valid tweet content that should be extracted.</div>
+          </div>
+        </article>
+      `;
+      
+      const result = await extractor.extract();
+      
+      expect(result.items).toHaveLength(1);
+      expect(result.items[0].textContent).toContain('Valid tweet content');
+    });
+
+    it('should handle truncated content with Show more button', async () => {
+      document.body.innerHTML = `
+        <article>
+          <div>
+            <div>
+              <div>This is a long tweet that has been truncated...</div>
+              <button data-testid="tweet-text-show-more-link">Show more</button>
+            </div>
+          </div>
+        </article>
+      `;
+      
+      const result = await extractor.extract();
+      
+      expect(result.items).toHaveLength(1);
+      expect(result.items[0].textContent).toContain('long tweet that has been truncated');
+      expect(result.items[0].textContent).toContain('Show more');
+    });
+
+    it('should handle large thread structures efficiently', async () => {
+      // Create a large thread structure to test performance
+      const articles = [];
+      for (let i = 0; i < 50; i++) {
+        articles.push(`
+          <article>
+            <div>
+              <div>
+                <div>User ${i}</div>
+                <div>@user${i}</div>
+              </div>
+              <div>This is tweet number ${i} with some content that should be extracted properly.</div>
+              <div>
+                <button>${i} Replies</button>
+                <button>${i * 2} Likes</button>
+              </div>
+            </div>
+          </article>
+        `);
+      }
+      
+      document.body.innerHTML = `
+        <main>
+          <region>
+            ${articles.join('')}
+          </region>
+        </main>
+      `;
+      
+      const result = await extractor.extract();
+      
+      expect(result.items).toHaveLength(50);
+      expect(result.items[0].textContent).toContain('tweet number 0');
+      expect(result.items[49].textContent).toContain('tweet number 49');
+    });
+
+    it('should handle tweets with special characters and Unicode', async () => {
+      document.body.innerHTML = `
+        <article>
+          <div>
+            <div>
+              <div>Tweet with special chars: "quotes" 'apostrophes' & ampersands</div>
+              <div>Unicode: 🚀 🎉 💻 中文字符 العربية Русский</div>
+            </div>
+          </div>
+        </article>
+      `;
+      
+      const result = await extractor.extract();
+      
+      expect(result.items).toHaveLength(1);
+      expect(result.items[0].textContent).toContain('special chars');
+      expect(result.items[0].textContent).toContain('🚀 🎉 💻');
+      expect(result.items[0].textContent).toContain('中文字符');
+      expect(result.items[0].textContent).toContain('العربية');
+      expect(result.items[0].textContent).toContain('Русский');
+    });
+
+    it('should handle tweets with line breaks and whitespace', async () => {
+      document.body.innerHTML = `
+        <article>
+          <div>
+            <div>
+              <div>First line of tweet
+              
+              Second line with line breaks
+              
+              Third line</div>
+            </div>
+          </div>
+        </article>
+      `;
+      
+      const result = await extractor.extract();
+      
+      expect(result.items).toHaveLength(1);
+      expect(result.items[0].textContent).toContain('First line of tweet');
+      expect(result.items[0].textContent).toContain('Second line with line breaks');
+      expect(result.items[0].textContent).toContain('Third line');
+    });
+
+    it('should handle tweets with embedded media placeholders', async () => {
+      document.body.innerHTML = `
+        <article>
+          <div>
+            <div>
+              <div>Check out this image:</div>
+              <div>
+                <img src="placeholder.jpg" alt="Embedded image" />
+              </div>
+              <div>And this video:</div>
+              <div>
+                <video>
+                  <source src="video.mp4" type="video/mp4" />
+                </video>
+              </div>
+              <div>Great content!</div>
+            </div>
+          </div>
+        </article>
+      `;
+      
+      const result = await extractor.extract();
+      
+      expect(result.items).toHaveLength(1);
+      expect(result.items[0].textContent).toContain('Check out this image');
+      expect(result.items[0].textContent).toContain('And this video');
+      expect(result.items[0].textContent).toContain('Great content');
+    });
+
+    it('should handle tweets with malformed HTML gracefully', async () => {
+      document.body.innerHTML = `
+        <article>
+          <div>
+            <div>
+              <div>Valid content before malformed HTML</div>
+              <div><span>Unclosed span and <div>mixed tags</span></div>
+              <div>Valid content after malformed HTML</div>
+            </div>
+          </div>
+        </article>
+      `;
+      
+      const result = await extractor.extract();
+      
+      expect(result.items).toHaveLength(1);
+      expect(result.items[0].textContent).toContain('Valid content before malformed');
+      expect(result.items[0].textContent).toContain('Unclosed span and');
+      expect(result.items[0].textContent).toContain('mixed tags');
+      expect(result.items[0].textContent).toContain('Valid content after malformed');
     });
   });
 });
