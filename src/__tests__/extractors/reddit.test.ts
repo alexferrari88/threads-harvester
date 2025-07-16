@@ -759,7 +759,7 @@ describe('RedditExtractor', () => {
         expect(item.id).toBeTruthy();
         expect(item.element).toBeTruthy();
         expect(item.textContent).toBeTruthy();
-        expect(item.textContent.length).toBeGreaterThan(5);
+        expect(item.textContent!.length).toBeGreaterThan(5);
         expect(item.selected).toBe(false);
         expect(['post', 'comment']).toContain(item.type);
       });
