@@ -459,5 +459,90 @@ describe('RedditExtractor', () => {
       expect(result.items[2].textContent).toContain('political_observer');
       expect(result.items[2].textContent).toContain('future administrations');
     });
+
+    it('should handle text post with both post body and comments', async () => {
+      // Simulate a text post on Reddit with both original post content and comments
+      document.title = 'I was disappointed in Claude after the recent updates : r/Anthropic';
+      document.body.innerHTML = `
+        <div slot="text-body">
+          <div class="post-content">
+            <p>I've been using Claude for several months now and I have to say that the recent updates have been disappointing.</p>
+            <p>The main issues I've noticed are:</p>
+            <ul>
+              <li>Response quality has decreased significantly</li>
+              <li>The model seems more restrictive now</li>
+              <li>Performance has been inconsistent</li>
+            </ul>
+            <p>Has anyone else experienced similar issues? I'm considering switching to other AI assistants.</p>
+          </div>
+        </div>
+        <div slot="comment">
+          <div class="comment-content">
+            <div class="comment-meta">
+              <span class="author">helpful_user</span>
+              <span class="score">23 points</span>
+              <span class="age">2 hours ago</span>
+            </div>
+            <div class="comment-body">
+              <p>I haven't noticed the same issues. Are you sure it's not just your specific use case?</p>
+              <p>Maybe try adjusting your prompts or approach.</p>
+            </div>
+          </div>
+        </div>
+        <div slot="comment">
+          <div class="comment-content">
+            <div class="comment-meta">
+              <span class="author">claude_fan</span>
+              <span class="score">15 points</span>
+              <span class="age">1 hour ago</span>
+            </div>
+            <div class="comment-body">
+              <p>I actually think the recent updates have been great. The responses feel more natural to me.</p>
+              <p>Different people have different preferences though!</p>
+            </div>
+          </div>
+        </div>
+        <div slot="comment">
+          <div class="comment-content">
+            <div class="comment-meta">
+              <span class="author">tech_expert</span>
+              <span class="score">8 points</span>
+              <span class="age">45 minutes ago</span>
+            </div>
+            <div class="comment-body">
+              <p>The model updates are always a balancing act. What specific tasks are you finding problematic?</p>
+              <p>If you can provide more details, maybe we can help troubleshoot.</p>
+            </div>
+          </div>
+        </div>
+      `;
+      
+      const result = await extractor.extract();
+      
+      expect(result.items).toHaveLength(4);
+      expect(result.title).toBe('I was disappointed in Claude after the recent updates : r/Anthropic');
+      
+      // Should have 3 comments and 1 post
+      const postItems = result.items.filter(item => item.type === 'post');
+      const commentItems = result.items.filter(item => item.type === 'comment');
+      
+      expect(postItems).toHaveLength(1);
+      expect(commentItems).toHaveLength(3);
+      
+      // Check the post content
+      expect(postItems[0].textContent).toContain('I\'ve been using Claude for several months');
+      expect(postItems[0].textContent).toContain('Response quality has decreased');
+      expect(postItems[0].textContent).toContain('considering switching to other AI assistants');
+      
+      // Check specific comments
+      expect(commentItems[0].textContent).toContain('helpful_user');
+      expect(commentItems[0].textContent).toContain('haven\'t noticed the same issues');
+      
+      expect(commentItems[1].textContent).toContain('claude_fan');
+      expect(commentItems[1].textContent).toContain('recent updates have been great');
+      
+      expect(commentItems[2].textContent).toContain('tech_expert');
+      expect(commentItems[2].textContent).toContain('balancing act');
+    });
   });
 });
