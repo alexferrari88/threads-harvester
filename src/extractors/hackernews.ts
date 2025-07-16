@@ -10,18 +10,64 @@ export class HackerNewsExtractor extends BaseExtractor {
       items: []
     };
 
-    // Extract comments using HN's comment structure
+    // 1. Extract the main submission first
+    const mainPost = document.querySelector(SITE_SELECTORS.HACKER_NEWS.POST);
+    if (mainPost && this.isElementVisible(mainPost)) {
+      // Text post - extract from .toptext
+      const textContent = this.extractTextFromElement(mainPost);
+      const postUrlEl = document.querySelector(SITE_SELECTORS.HACKER_NEWS.POST_ID) as HTMLAnchorElement;
+      
+      if (textContent && textContent.length > 10) {
+        const item: ContentItem = {
+          id: this.generateId(textContent),
+          element: mainPost as HTMLElement,
+          URL: postUrlEl?.href,
+          textContent,
+          htmlContent: this.includeHtml ? mainPost.innerHTML : undefined,
+          type: 'post',
+          selected: false
+        };
+        content.items.push(item);
+      }
+    } else {
+      // URL-only submission - extract from .titleline > a (find first visible one)
+      const titleLinkElements = document.querySelectorAll(SITE_SELECTORS.HACKER_NEWS.TITLE_LINK) as NodeListOf<HTMLAnchorElement>;
+      for (const titleLinkEl of titleLinkElements) {
+        if (this.isElementVisible(titleLinkEl)) {
+          const textContent = this.extractTextFromElement(titleLinkEl);
+          const postUrlEl = document.querySelector(SITE_SELECTORS.HACKER_NEWS.POST_ID) as HTMLAnchorElement;
+          
+          if (textContent) {
+            const item: ContentItem = {
+              id: this.generateId(textContent),
+              element: titleLinkEl.closest('.athing') as HTMLElement || titleLinkEl,
+              URL: postUrlEl?.href,
+              textContent,
+              htmlContent: this.includeHtml ? titleLinkEl.outerHTML : undefined,
+              type: 'post',
+              selected: false
+            };
+            content.items.push(item);
+            break; // Only extract the first visible title link
+          }
+        }
+      }
+    }
+
+    // 2. Extract all comments
     const commentElements = document.querySelectorAll(SITE_SELECTORS.HACKER_NEWS.COMMENT_TREE) as NodeListOf<HTMLElement>;
     
     commentElements.forEach((commentEl) => {
       const commentContent = commentEl.querySelector(SITE_SELECTORS.HACKER_NEWS.COMMENTS);
       if (commentContent && this.isElementVisible(commentContent)) {
         const textContent = this.extractTextFromElement(commentContent);
+        const commentUrlEl = commentEl.querySelector(SITE_SELECTORS.HACKER_NEWS.COMMENT_ID) as HTMLAnchorElement;
         
         if (textContent && textContent.length > 10) {
           const item: ContentItem = {
             id: this.generateId(textContent),
             element: commentEl,
+            URL: commentUrlEl?.href,
             textContent,
             htmlContent: this.includeHtml ? commentContent.innerHTML : undefined,
             type: 'comment',
@@ -31,31 +77,6 @@ export class HackerNewsExtractor extends BaseExtractor {
         }
       }
     });
-
-    // If no comments found, try to extract the main story
-    if (content.items.length === 0) {
-      const storyElements = document.querySelectorAll(SITE_SELECTORS.HACKER_NEWS.STORY_ITEM) as NodeListOf<HTMLElement>;
-      
-      storyElements.forEach((storyEl) => {
-        const titleEl = storyEl.querySelector(SITE_SELECTORS.HACKER_NEWS.TITLE_LINK);
-        if (titleEl && this.isElementVisible(titleEl)) {
-          const textContent = this.extractTextFromElement(titleEl);
-          
-          if (textContent) {
-            const item: ContentItem = {
-              id: this.generateId(textContent),
-              element: storyEl,
-              URL: (titleEl as HTMLAnchorElement).href,
-              textContent,
-              htmlContent: this.includeHtml ? storyEl.innerHTML : undefined,
-              type: 'post',
-              selected: false
-            };
-            content.items.push(item);
-          }
-        }
-      });
-    }
 
     return content;
   }

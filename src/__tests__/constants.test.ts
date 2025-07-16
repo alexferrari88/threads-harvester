@@ -11,7 +11,9 @@ describe('SITE_SELECTORS', () => {
   it('should contain Hacker News selectors', () => {
     expect(SITE_SELECTORS.HACKER_NEWS).toBeDefined();
     expect(SITE_SELECTORS.HACKER_NEWS.POST).toBe('.toptext');
+    expect(SITE_SELECTORS.HACKER_NEWS.POST_ID).toBe('.subtext span.age > a');
     expect(SITE_SELECTORS.HACKER_NEWS.COMMENTS).toBe('.commtext');
+    expect(SITE_SELECTORS.HACKER_NEWS.COMMENT_ID).toBe('.comhead span.age > a');
     expect(SITE_SELECTORS.HACKER_NEWS.COMMENT_TREE).toBe('.comment-tree .comtr');
     expect(SITE_SELECTORS.HACKER_NEWS.STORY_ITEM).toBe('.athing');
     expect(SITE_SELECTORS.HACKER_NEWS.TITLE_LINK).toBe('.titleline > a');
@@ -42,7 +44,7 @@ describe('SITE_SELECTORS', () => {
     
     expect(Object.keys(SITE_SELECTORS.REDDIT)).toEqual(['POST', 'COMMENTS']);
     expect(Object.keys(SITE_SELECTORS.HACKER_NEWS)).toEqual([
-      'POST', 'COMMENTS', 'COMMENT_TREE', 'STORY_ITEM', 'TITLE_LINK'
+      'POST', 'POST_ID', 'COMMENTS', 'COMMENT_ID', 'COMMENT_TREE', 'STORY_ITEM', 'TITLE_LINK'
     ]);
     expect(Object.keys(SITE_SELECTORS.TWITTER)).toEqual([
       'TWEET', 'TWEET_ARTICLE', 'SHOW_MORE_BUTTON', 'USER_NAME', 'SPAM_BUTTON'

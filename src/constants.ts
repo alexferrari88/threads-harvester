@@ -9,7 +9,9 @@ export const SITE_SELECTORS = {
   },
   HACKER_NEWS: {
     POST: '.toptext',
+    POST_ID: '.subtext span.age > a', // the href
     COMMENTS: '.commtext',
+    COMMENT_ID: '.comhead span.age > a', // the href 
     COMMENT_TREE: '.comment-tree .comtr',
     STORY_ITEM: '.athing',
     TITLE_LINK: '.titleline > a'

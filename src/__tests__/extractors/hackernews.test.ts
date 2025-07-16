@@ -137,12 +137,37 @@ describe('HackerNewsExtractor', () => {
       expect(result.items[0].textContent).toContain('Visible comment content');
     });
 
+    it('should extract text posts with content', async () => {
+      document.body.innerHTML = `
+        <div class="toptext">
+          This is the main post content with enough text to be extracted properly.
+        </div>
+        <div class="subtext">
+          <span class="age">
+            <a href="https://news.ycombinator.com/item?id=123">2 hours ago</a>
+          </span>
+        </div>
+      `;
+      
+      const result = await extractor.extract();
+      
+      expect(result.items).toHaveLength(1);
+      expect(result.items[0].type).toBe('post');
+      expect(result.items[0].textContent).toContain('This is the main post content');
+      expect(result.items[0].URL).toBe('https://news.ycombinator.com/item?id=123');
+    });
+
     it('should extract stories when no comments are found', async () => {
       document.body.innerHTML = `
         <div class="athing">
           <div class="titleline">
             <a href="https://example.com/story">An Interesting Story Title</a>
           </div>
+        </div>
+        <div class="subtext">
+          <span class="age">
+            <a href="https://news.ycombinator.com/item?id=123">2 hours ago</a>
+          </span>
         </div>
       `;
       
@@ -151,31 +176,35 @@ describe('HackerNewsExtractor', () => {
       expect(result.items).toHaveLength(1);
       expect(result.items[0].type).toBe('post');
       expect(result.items[0].textContent).toBe('An Interesting Story Title');
-      expect(result.items[0].URL).toBe('https://example.com/story');
+      expect(result.items[0].URL).toBe('https://news.ycombinator.com/item?id=123');
       expect(result.items[0].element.classList.contains('athing')).toBe(true);
     });
 
-    it('should extract multiple stories', async () => {
+    it('should extract main story with multiple title links present', async () => {
       document.body.innerHTML = `
         <div class="athing">
           <div class="titleline">
-            <a href="https://example.com/story1">First Story Title</a>
+            <a href="https://example.com/story1">Main Story Title</a>
           </div>
         </div>
         <div class="athing">
           <div class="titleline">
-            <a href="https://example.com/story2">Second Story Title</a>
+            <a href="https://example.com/story2">Related Story Title</a>
           </div>
+        </div>
+        <div class="subtext">
+          <span class="age">
+            <a href="https://news.ycombinator.com/item?id=123">2 hours ago</a>
+          </span>
         </div>
       `;
       
       const result = await extractor.extract();
       
-      expect(result.items).toHaveLength(2);
-      expect(result.items[0].textContent).toBe('First Story Title');
-      expect(result.items[1].textContent).toBe('Second Story Title');
-      expect(result.items[0].URL).toBe('https://example.com/story1');
-      expect(result.items[1].URL).toBe('https://example.com/story2');
+      expect(result.items).toHaveLength(1);
+      expect(result.items[0].textContent).toBe('Main Story Title');
+      expect(result.items[0].URL).toBe('https://news.ycombinator.com/item?id=123');
+      expect(result.items[0].type).toBe('post');
     });
 
     it('should ignore hidden stories', async () => {
@@ -190,6 +219,11 @@ describe('HackerNewsExtractor', () => {
             <a href="https://example.com/story2">Visible Story</a>
           </div>
         </div>
+        <div class="subtext">
+          <span class="age">
+            <a href="https://news.ycombinator.com/item?id=123">2 hours ago</a>
+          </span>
+        </div>
       `;
       
       const result = await extractor.extract();
@@ -198,11 +232,16 @@ describe('HackerNewsExtractor', () => {
       expect(result.items[0].textContent).toBe('Visible Story');
     });
 
-    it('should prioritize comments over stories', async () => {
+    it('should extract both main story and comments', async () => {
       document.body.innerHTML = `
         <div class="comment-tree">
           <div class="comtr">
             <div class="commtext">Comment content that is long enough.</div>
+            <div class="comhead">
+              <span class="age">
+                <a href="https://news.ycombinator.com/item?id=456">1 hour ago</a>
+              </span>
+            </div>
           </div>
         </div>
         <div class="athing">
@@ -210,13 +249,22 @@ describe('HackerNewsExtractor', () => {
             <a href="https://example.com/story">Story Title</a>
           </div>
         </div>
+        <div class="subtext">
+          <span class="age">
+            <a href="https://news.ycombinator.com/item?id=123">2 hours ago</a>
+          </span>
+        </div>
       `;
       
       const result = await extractor.extract();
       
-      expect(result.items).toHaveLength(1);
-      expect(result.items[0].type).toBe('comment');
-      expect(result.items[0].textContent).toContain('Comment content');
+      expect(result.items).toHaveLength(2);
+      expect(result.items[0].type).toBe('post');
+      expect(result.items[0].textContent).toBe('Story Title');
+      expect(result.items[0].URL).toBe('https://news.ycombinator.com/item?id=123');
+      expect(result.items[1].type).toBe('comment');
+      expect(result.items[1].textContent).toContain('Comment content');
+      expect(result.items[1].URL).toBe('https://news.ycombinator.com/item?id=456');
     });
 
     it('should include HTML content when includeHtml is true', async () => {
@@ -296,8 +344,8 @@ describe('HackerNewsExtractor', () => {
       expect(result.items[0].textContent).toContain('Additional nested content');
     });
 
-    it('should handle mixed comments and stories scenario (fallback)', async () => {
-      // Comments exist but are too short, should fall back to stories
+    it('should handle mixed comments and stories scenario (short comments ignored)', async () => {
+      // Comments exist but are too short, should still extract main story
       document.body.innerHTML = `
         <div class="comment-tree">
           <div class="comtr">
@@ -309,6 +357,11 @@ describe('HackerNewsExtractor', () => {
             <a href="https://example.com/story">Story Title</a>
           </div>
         </div>
+        <div class="subtext">
+          <span class="age">
+            <a href="https://news.ycombinator.com/item?id=123">2 hours ago</a>
+          </span>
+        </div>
       `;
       
       const result = await extractor.extract();
@@ -316,6 +369,7 @@ describe('HackerNewsExtractor', () => {
       expect(result.items).toHaveLength(1);
       expect(result.items[0].type).toBe('post');
       expect(result.items[0].textContent).toBe('Story Title');
+      expect(result.items[0].URL).toBe('https://news.ycombinator.com/item?id=123');
     });
   });
 });
