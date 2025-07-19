@@ -496,9 +496,9 @@ describe('UIManager', () => {
       const checkbox = checkboxes[0];
 
       // Should have positioning values based on mocked getBoundingClientRect
-      // rect.top(10) + scrollTop(0) - 5 = 5, rect.left(20) + scrollLeft(0) - 25 = -5
+      // rect.top(10) + scrollTop(0) - 5 = 5, rect.left(20) + scrollLeft(0) - 25 = -5, but clamped to 5
       expect(parseFloat(checkbox.style.top)).toBe(5);
-      expect(parseFloat(checkbox.style.left)).toBe(-5);
+      expect(parseFloat(checkbox.style.left)).toBe(5); // Clamped to minimum 5px to prevent off-screen positioning
     });
 
     it('should account for scroll position in fallback positioning', () => {
@@ -524,6 +524,39 @@ describe('UIManager', () => {
       // Reset scroll values
       Object.defineProperty(window, 'pageYOffset', { value: 0, writable: true });
       Object.defineProperty(window, 'pageXOffset', { value: 0, writable: true });
+    });
+
+    it('should prevent checkboxes from being positioned off-screen on small screens', () => {
+      // Create mock element that would cause off-screen positioning in original implementation
+      const mockElement = {
+        getBoundingClientRect: () => ({
+          top: 100,
+          left: 10, // Very close to left edge - would cause negative positioning with original logic
+          width: 300,
+          height: 50
+        })
+      } as HTMLElement;
+
+      const smallScreenItem: ContentItem = {
+        id: 'small-screen-test',
+        element: mockElement,
+        textContent: 'Test content for small screen positioning',
+        type: 'comment',
+        selected: false
+      };
+
+      const testUIManager = new UIManager();
+      testUIManager.displayCheckboxes([smallScreenItem]);
+
+      const checkboxes = document.querySelectorAll('div[style*="position: absolute"]') as NodeListOf<HTMLElement>;
+      const checkbox = checkboxes[0];
+
+      // Original calculation would be: 10 - 25 = -15 (off-screen)
+      // Fixed calculation should be: Math.max(5, -15) = 5 (visible)
+      expect(parseFloat(checkbox.style.left)).toBe(5);
+      expect(parseFloat(checkbox.style.left)).toBeGreaterThanOrEqual(5);
+      
+      testUIManager.destroy();
     });
   });
 });

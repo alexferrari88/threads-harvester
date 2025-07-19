@@ -94,7 +94,9 @@ export class UIManager {
       const scrollTop = window.pageYOffset || document.documentElement.scrollTop || 0;
       const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft || 0;
       checkbox.style.top = `${rect.top + scrollTop - 5}px`;
-      checkbox.style.left = `${rect.left + scrollLeft - 25}px`;
+      // Ensure checkbox doesn't go off-screen on small screens
+      const leftPosition = Math.max(5, rect.left + scrollLeft - 25);
+      checkbox.style.left = `${leftPosition}px`;
     }
 
     document.body.appendChild(checkbox);
